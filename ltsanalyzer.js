@@ -141,15 +141,17 @@ class ltsanalyzer {
           for (let i = 0; i < ln; i++) {
             let nodeid = way.nodes[i]
             let node = this.nodes[nodeid]
-            if (csep) {
+            if (node.lat && node.lon) {
+              if (csep) {
+                buffer += ','
+              }
+              csep = true
+              buffer += '['
+              buffer += this.formatLatLong(node.lon)
               buffer += ','
+              buffer += this.formatLatLong(node.lat)
+              buffer += ']'
             }
-            csep = true
-            buffer += '['
-            buffer += this.formatLatLong(node.lon)
-            buffer += ','
-            buffer += this.formatLatLong(node.lat)
-            buffer += ']'
           }
           buffer += ']}}'
         }
