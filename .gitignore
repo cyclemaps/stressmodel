@@ -62,3 +62,6 @@ typings/
 
 # osm data
 *.osm
+
+# DS_SStore
+.DS_Store

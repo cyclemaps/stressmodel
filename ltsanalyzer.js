@@ -4,6 +4,9 @@ const path = require('path')
 const loadmodel = require('./loadmodel')
 const Xml2object = require('xml2object')
 
+// let undefinedNodes = []
+// let wayIdsWithEmptyNodes = []
+
 class ltsanalyzer {
   constructor (options) {
     this.verbose = options.verbose
@@ -46,14 +49,14 @@ class ltsanalyzer {
     parser.start()
   }
 
-  processWays (name, childNode) {
+  processWays (name, argWay) {
     if (name === 'way') {
       let newway = {level: 0, tags: {}, nodes: []}
-      let tags = childNode.tag
+      let tags = argWay.tag
       if (Array.isArray(tags)) {
-        for (let t in childNode.tag) {
-          if (this.model.usesTag(childNode.tag[t].k) || (this.names && childNode.tag[t].k === 'name')) {
-            newway.tags[childNode.tag[t].k] = childNode.tag[t].v
+        for (let t in argWay.tag) {
+          if (this.model.usesTag(argWay.tag[t].k) || (this.names && argWay.tag[t].k === 'name')) {
+            newway.tags[argWay.tag[t].k] = argWay.tag[t].v
           }
         }
       } else if (typeof tags !== 'undefined') {
@@ -61,18 +64,18 @@ class ltsanalyzer {
           newway.tags[tags.k] = tags.v
         }
       }
-      let limit = childNode.nd.length
+      let limit = argWay.nd.length
       for (let i = 0; i < limit; i++) {
-        newway.nodes.push(childNode.nd[i].ref)
+        newway.nodes.push(argWay.nd[i].ref)
       }
       newway.level = this.model.evaluateLTS(newway).lts
       if (newway.level > 0 || (this.zero && typeof newway.tags['highway'] !== 'undefined')) {
-        this.ways[childNode.id] = newway
+        this.ways[argWay.id] = newway
         for (let i = 0; i < newway.nodes.length; i++) {
           this.nodes[newway.nodes[i]] = {}
         }
       }
-    } 
+    }
   }
 
   onCompleteLoadWays () {
@@ -89,12 +92,15 @@ class ltsanalyzer {
     parser.start()
   }
 
-  processNodes (name, childNode) {
+  processNodes (name, argNode) {
     if (name === 'node') {
-      let newnode = this.nodes[childNode.id]
+      let newnode = this.nodes[argNode.id]
       if (typeof newnode !== 'undefined') {
-        this.nodes[childNode.id] = {lat: childNode.lat, lon: childNode.lon}
-      }
+        this.nodes[argNode.id] = {lat: argNode.lat, lon: argNode.lon}
+      } 
+      // else {
+      //   undefinedNodes.push(node.id)
+      // }
     }
   }
 
@@ -141,15 +147,24 @@ class ltsanalyzer {
           for (let i = 0; i < ln; i++) {
             let nodeid = way.nodes[i]
             let node = this.nodes[nodeid]
-            if (csep) {
+
+            if (node.lat && node.lon) {
+              if (csep) {
+                buffer += ','
+              }
+              csep = true
+              buffer += '['
+              buffer += this.formatLatLong(node.lon)
               buffer += ','
-            }
-            csep = true
-            buffer += '['
-            buffer += this.formatLatLong(node.lon)
-            buffer += ','
-            buffer += this.formatLatLong(node.lat)
-            buffer += ']'
+              buffer += this.formatLatLong(node.lat)
+              buffer += ']'
+            } 
+            // else {
+            //   if (wayIdsWithEmptyNodes.indexOf(id) == -1){
+            //     wayIdsWithEmptyNodes.push(id)
+            //   }
+            // }
+
           }
           buffer += ']}}'
         }
@@ -157,6 +172,9 @@ class ltsanalyzer {
       buffer += ']}'
       fs.writeFileSync(lfilename, buffer)
     }
+    // fs.writeFileSync('incomplete_ways_ids.json','{"incomplete_ways_ids":'+JSON.stringify(wayIdsWithEmptyNodes)+'}')
+    // fs.writeFileSync('incomplete_node_ids.json','{"incomplete_node_ids":'+JSON.stringify(undefinedNodes)+'}')
+
     return true
   }
 
