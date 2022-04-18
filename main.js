@@ -1,6 +1,5 @@
-'use strict'
-const Options = require('./options')
-const LTSAnalyzer = require('./ltsanalyzer')
+import Options from './options.js'
+import LTSAnalyzer from './ltsanalyzer.js'
 
 let options = new Options()
 const args = process.argv

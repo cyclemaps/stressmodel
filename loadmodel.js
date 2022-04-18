@@ -1,8 +1,7 @@
-'use strict'
-let stressmodel = require('./stressmodel.js')
-let wintermodel = require('./wintermodel.js')
+import stressmodel from './stressmodel.js'
+import wintermodel from './wintermodel.js'
 
-module.exports = function (name) {
+export default function lodamodel(name) {
   if (name === 'default' || name === 'stressmodel' || name.length == 0) return stressmodel
   if (name === 'wintermodel') return wintermodel
   return null

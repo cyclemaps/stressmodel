@@ -1,18 +1,23 @@
-'use strict'
-const fs = require('fs')
-const path = require('path')
-const loadmodel = require('./loadmodel')
-const Xml2object = require('xml2object')
+import sqlize from './sqlzconnection.js'
+import fs from 'fs'
+import loadmodel from './loadmodel.js'
+import Xml2object from 'xml2object'
+import path from 'path'
 
 // let undefinedNodes = []
 // let wayIdsWithEmptyNodes = []
 
-class ltsanalyzer {
+async function instertIntoDb (data, zero, verbose) {
+  await sqlize(data, zero, verbose)
+}
+
+export default class ltsanalyzer {
   constructor (options) {
     this.verbose = options.verbose
     this.zero = options.zero
     this.prefix = options.ltsprefix
     this.destdir = options.destdir
+    this.database = options.database
     this.ways = {}
     this.nodes = {}
     this.names = options.names
@@ -104,10 +109,22 @@ class ltsanalyzer {
     }
   }
 
+  createDbData () {
+    let data = { 0: [], 1: [], 2: [], 3: [], 4: [] }
+    for (let id in this.ways) {
+      data[this.ways[id].level].push(id)
+    }
+    instertIntoDb(data, this.zero, this.verbose)
+  }
+
   onCompleteLoadNodes () {
     let err = null
-    if (!this.createLevelFiles()) {
-      err = 'Failure while creating the level files'
+    if (this.database) {
+      this.createDbData()
+    } else {
+      if (!this.createLevelFiles()) {
+        err = 'Failure while creating the level files'
+      }
     }
     this.onCompleteRun(err)
   }
@@ -182,5 +199,3 @@ class ltsanalyzer {
     return (latlong[latlong.length - 1] === '0') ? parseFloat(latlong).toString() : latlong
   }
 }
-
-module.exports = ltsanalyzer

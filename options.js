@@ -1,7 +1,6 @@
-'use strict'
-var fs = require('fs')
+import fs from 'fs'
 
-class Options {
+export default class Options {
   constructor () {
     this.destdir = '.'
     this.indent = false
@@ -11,6 +10,7 @@ class Options {
     this.verbose = false
     this.zero = false
     this.names = false
+    this.database = false
   }
 
   usage () {
@@ -33,12 +33,15 @@ class Options {
     console.log('  -v, --verbose        Enables verbose output.')
     console.log('  -z, --zero           Generate zero level file containing all ways')
     console.log('                       where cycling is not permitted.')
+    console.log('  -D, --database       Output to database instead of a file. Your .env file')
+    console.log('                       needs to have a DB_CONNECT_URI or DB_USER, DB_HOST, DB_PORT,')
+    console.log('                       DB_NAME and an optional DB_PASS while using this option.')
   }
 
   Load (args) {
     var help = false
     for (var i = 2; i < args.length; i++) {
-      var arg = args[i].trim().toLowerCase()
+      var arg = args[i].trim()
       if (arg === '-f' || arg === '--filename') {
         if (args.length >= i) {
           i++
@@ -87,6 +90,8 @@ class Options {
         this.verbose = true
       } else if (arg === '-z' || arg === '--zero') {
         this.zero = true
+      } else if (arg === '-D' || arg === '--database') {
+        this.database = true
       } else {
         console.log('Unknown option "' + arg + '". Try --help for more information.')
         return false
@@ -107,5 +112,3 @@ class Options {
     return true
   }
 }
-
-module.exports = Options
